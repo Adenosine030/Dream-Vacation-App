@@ -1,0 +1,48 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dream_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Ademola01
+      MYSQL_DATABASE: dreamvacations
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      retries: 10
+    networks:
+      - appnet
+
+  backend:
+    build: ./backend
+    container_name: dream_backend
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: Ademola01
+      DB_NAME: dreamvacations
+      DB_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    networks:
+      - appnet
+
+  frontend:
+    build: ./frontend
+    container_name: dream_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - appnet
+
+volumes:
+  mysql_data:
+
+networks:
+  appnet:
